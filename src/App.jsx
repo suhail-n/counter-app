@@ -1,5 +1,5 @@
 import "./App.css";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import Counters from "./components/Counters";
 import NavBar from "./components/NavBar";
 import Login from "./components/Login";
@@ -16,34 +16,47 @@ export default function App() {
   const [counters, setCounters] = useState(defaultCounters);
   const [page, setPage] = useState("login");
   const [user, setUser] = useState("");
-  useDocumentTitle(user ? `${user}'s Counters`: '');
-  
-  const onDeleteHandler = (id) =>
-    setCounters(counters.filter((counter) => counter.id !== id));
+  useDocumentTitle(user ? `${user}'s Counters` : "");
 
-  const onResetHandler = () => setCounters(defaultCounters);
+  const onDeleteHandler = useCallback(
+    (id) => setCounters(_counters => _counters.filter((counter) => counter.id !== id)),
+    [setCounters]
+  );
 
-  const onIncrementHandler = (id) =>
-    setCounters(
-      counters.reduce(
-        (acc, cur) =>
-          cur.id === id ? ++cur.value | true && [...acc, cur] : [...acc, cur],
-        []
-      )
-    );
-  const onDecrementHandler = (id) =>
-    setCounters(
-      counters.reduce(
-        (acc, cur) =>
-          cur.id === id ? --cur.value | true && [...acc, cur] : [...acc, cur],
-        []
-      )
-    );
+  const onResetHandler = useCallback(() => setCounters(defaultCounters), [
+    defaultCounters,
+  ]);
 
+  const onIncrementHandler = useCallback(
+    (id) =>
+      setCounters((_counters) =>
+        _counters.reduce(
+          (acc, cur) =>
+            cur.id === id
+              ? (++cur.value || true) && [...acc, cur]
+              : [...acc, cur],
+          []
+        )
+      ),
+    [setCounters]
+  );
+  const onDecrementHandler = useCallback(
+    (id) =>
+      setCounters((_counters) =>
+        _counters.reduce(
+          (acc, cur) =>
+            cur.id === id
+              ? (--cur.value || true) && [...acc, cur]
+              : [...acc, cur],
+          []
+        )
+      ),
+    [setCounters]
+  );
   return (
     <PageContext.Provider value={{ page, setPage: setPage }}>
       <NavBar count={counters.reduce((acc, cur) => cur.value + acc, 0)} />
-      {page === "login" ? <Login onLogin={setUser}/> : null}
+      {page === "login" ? <Login onLogin={setUser} /> : null}
       {page === "counters" ? (
         <Counters
           counters={counters}
